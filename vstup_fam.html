@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Вступ до сімʼї | Анкета</title>
+  <meta name="color-scheme" content="dark light">
+  <style>
+    :root{
+      --bg-start:#0a0a12;
+      --bg-end:#141429;
+      --card-bg:rgba(18,18,30,0.7);
+      --card-stroke:rgba(255,255,255,0.08);
+      --text:#e9e9f3;
+      --muted:#a2a4b6;
+      --accent:#7c5cff;
+      --accent-2:#18e1a7;
+      --input-bg:#1b1b2b;
+      --input-stroke:#2b2b44;
+      --input-focus:#39395b;
+      --error:#ff5c7a;
+      --success:#3ce07a;
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(140,120,255,.15), transparent 60%),
+        radial-gradient(1100px 500px at 110% 0%, rgba(24,225,167,.09), transparent 55%),
+        linear-gradient(135deg, var(--bg-start), var(--bg-end));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:34px 18px;
+    }
+
+    .wrap{
+      width:min(920px, 100%);
+      background:var(--card-bg);
+      border:1px solid var(--card-stroke);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      backdrop-filter:saturate(115%) blur(12px);
+      overflow:hidden;
+      animation:fadeIn .5s ease;
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    .header{
+      display:flex; align-items:center; gap:14px;
+      padding:20px 24px 10px;
+      border-bottom:1px solid var(--card-stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+    }
+    .logo{
+      width:42px; height:42px; border-radius:12px;
+      display:grid; place-items:center; font-size:22px;
+      background:linear-gradient(135deg, var(--accent), #543dff);
+      box-shadow:0 8px 20px rgba(124,92,255,.25);
+    }
+    .title h1{margin:0; font-size:20px; letter-spacing:.4px}
+    .title p{margin:4px 0 0; color:var(--muted); font-size:13px}
+
+    .content{padding:20px; display:grid; gap:18px}
+
+    /* Stepper */
+    .stepper{
+      position:relative; display:flex; align-items:center; gap:0; padding:10px 6px 0;
+    }
+    .stepper .track{
+      position:absolute; left:42px; right:42px; top:26px; height:3px;
+      background:rgba(255,255,255,.08); border-radius:3px; overflow:hidden;
+    }
+    .stepper .track > span{
+      display:block; height:100%; width:var(--w, 0%);
+      background:linear-gradient(90deg, var(--accent), #5e46ff);
+      transition:width .35s ease;
+    }
+    .step{
+      position:relative; z-index:1; flex:1; text-align:center;
+    }
+    .step .dot{
+      width:34px; height:34px; margin:0 auto 8px; border-radius:50%;
+      display:grid; place-items:center; font-weight:600; font-size:14px;
+      color:#fff; border:1px solid var(--card-stroke);
+      background:#1a1930;
+      box-shadow:inset 0 0 0 2px rgba(255,255,255,.02);
+      transition:.25s ease;
+    }
+    .step.active .dot, .step.done .dot{
+      background:linear-gradient(135deg, var(--accent), #5e46ff);
+      box-shadow:0 6px 16px rgba(124,92,255,.35);
+    }
+    .step label{
+      display:block; font-size:12px; color:var(--muted);
+      letter-spacing:.3px;
+    }
+
+    /* Form */
+    form{display:block}
+    .pane{display:none; animation:slide .35s ease}
+    .pane.active{display:block}
+    @keyframes slide{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)}}
+
+    .section-title{
+      margin:10px 0 14px; font-size:13px; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.8px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; font-size:12px; border-radius:999px;
+      background:rgba(124,92,255,.16); color:#d9d4ff; border:1px solid rgba(124,92,255,.28);
+    }
+
+    .grid{display:grid; gap:14px}
+    .g-2{grid-template-columns:1fr}
+    @media (min-width: 640px){ .g-2{grid-template-columns:1fr 1fr} }
+
+    label{font-size:13px; opacity:.92; margin:2px 0 6px; display:block}
+    .field{
+      background:var(--input-bg);
+      border:1px solid var(--input-stroke);
+      border-radius:12px;
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      transition:background .2s, border-color .2s, box-shadow .2s, transform .05s;
+    }
+    .field:focus-within{
+      background:var(--input-focus);
+      border-color:#58588a;
+      box-shadow:0 0 0 4px rgba(124,92,255,.18);
+    }
+    .field .icon{opacity:.75; font-size:18px}
+    input, textarea, select{
+      width:100%; background:transparent; border:none; color:var(--text);
+      font-size:14px; outline:none;
+    }
+    textarea{resize:vertical; min-height:88px}
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
+    input[type="number"]{ -moz-appearance:textfield }
+
+    .hint{ color:var(--muted); font-size:12px; margin-top:6px }
+
+    /* Stats preview */
+    .preview{
+      border:1px dashed rgba(255,255,255,.15);
+      border-radius:12px; padding:12px; display:flex; gap:12px; align-items:center;
+      background:rgba(255,255,255,.02)
+    }
+    .preview img{
+      width:72px; height:72px; object-fit:cover; border-radius:8px; display:none;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .preview .empty{ color:var(--muted); font-size:13px }
+
+    /* Actions */
+    .actions{ display:flex; gap:10px; justify-content:space-between; margin-top:6px }
+    .btn{
+      appearance:none; border:1px solid transparent; border-radius:12px; padding:12px 16px;
+      color:#fff; background:linear-gradient(135deg, var(--accent), #5e46ff);
+      box-shadow:0 10px 22px rgba(124,92,255,.35);
+      font-weight:600; letter-spacing:.3px; cursor:pointer;
+      transition:.2s ease; min-width:140px; text-align:center;
+    }
+    .btn:hover{ transform:translateY(-1px) }
+    .btn:active{ transform:translateY(0) scale(.99) }
+    .btn[disabled]{ opacity:.65; cursor:not-allowed; transform:none; box-shadow:none }
+    .btn.secondary{
+      background:transparent; color:var(--text); border-color:rgba(255,255,255,.16);
+      box-shadow:none;
+    }
+    .btn.secondary:hover{ background:rgba(255,255,255,.04) }
+
+    /* Review box */
+    .review{
+      border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:12px;
+      background:rgba(255,255,255,.03); display:grid; gap:8px; font-size:14px
+    }
+    .kv{ display:flex; gap:8px; }
+    .kv b{ width:160px; color:#d8d8ef; font-weight:600 }
+
+    /* Toast */
+    .toast{
+      position:fixed; right:18px; top:18px; z-index:10;
+      padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.16);
+      background:rgba(20,20,32,.9); color:#fff; box-shadow:var(--shadow);
+      display:none; gap:10px; align-items:center
+    }
+    .toast.show{ display:flex; animation:pop .2s ease }
+    @keyframes pop{ from{transform:translateY(-6px); opacity:0} to{transform:translateY(0); opacity:1} }
+    .toast.success{ border-color:rgba(60,224,122,.35) }
+    .toast.error{ border-color:rgba(255,92,122,.35) }
+
+    /* Footer note */
+    .note{
+      padding:10px 20px 20px; color:var(--muted); font-size:12px;
+      display:flex; gap:8px; align-items:flex-start
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="logo">👑</div>
+      <div class="title">
+        <h1>Вступ до сімʼї</h1>
+        <p>Заповніть анкету — ми звʼяжемось якнайшвидше</p>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stepper -->
+      <div class="stepper" aria-label="Кроки заповнення">
+        <div class="track" aria-hidden="true"><span id="progress"></span></div>
+
+        <div class="step" data-idx="0">
+          <div class="dot">1</div>
+          <label>Особиста</label>
+        </div>
+        <div class="step" data-idx="1">
+          <div class="dot">2</div>
+          <label>Ігрова</label>
+        </div>
+        <div class="step" data-idx="2">
+          <div class="dot">3</div>
+          <label>Контакти</label>
+        </div>
+      </div>
+
+      <form id="familyForm" novalidate>
+        <!-- STEP 1 -->
+        <section class="pane active" data-step="0">
+          <div class="section-title">
+            <span class="badge">📌 Особиста інформація</span>
+          </div>
+          <div class="grid g-2">
+            <div>
+              <label for="nick">Ваш нікнейм</label>
+              <div class="field"><span class="icon">🎯</span>
+                <input type="text" id="nick" name="nick" placeholder="Nick_Name" required />
+              </div>
+            </div>
+
+            <div>
+              <label for="level">Ваш рівень</label>
+              <div class="field"><span class="icon">📈</span>
+                <input type="number" id="level" name="level" placeholder="Напр. 12" min="1" required />
+              </div>
+            </div>
+
+            <div>
+              <label for="realname">Імʼя (IRL)</label>
+              <div class="field"><span class="icon">🪪</span>
+                <input type="text" id="realname" name="realname" placeholder="Імʼя або псевдонім" required />
+              </div>
+            </div>
+
+            <div>
+              <label for="age">Ваш вік (IRL)</label>
+              <div class="field"><span class="icon">🎂</span>
+                <input type="number" id="age" name="age" placeholder="18" min="10" max="99" required />
+              </div>
+            </div>
+
+            <div class="g-2" style="grid-column:1/-1">
+              <label for="timezone">Ваш часовий пояс</label>
+              <div class="field"><span class="icon">🕒</span>
+                <input type="text" id="timezone" name="timezone" placeholder="UTC+2 / Europe/Kyiv" required />
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn secondary" disabled>Назад</button>
+            <button type="button" class="btn" data-next>Далі</button>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section class="pane" data-step="1">
+          <div class="section-title">
+            <span class="badge">🎮 Ігрова інформація</span>
+          </div>
+          <div class="grid g-2">
+            <div style="grid-column:1/-1">
+              <label for="experience">Досвід на РП проектах і в сімʼях</label>
+              <div class="field"><span class="icon">📜</span>
+                <textarea id="experience" name="experience" placeholder="Коротко опишіть ваш попередній досвід" required></textarea>
+              </div>
+            </div>
+
+            <div>
+              <label for="online">Ваш середній онлайн</label>
+              <div class="field"><span class="icon">📆</span>
+                <input type="text" id="online" name="online" placeholder="Напр. 2–4 год/день" required />
+              </div>
+            </div>
+
+            <div>
+              <label for="hours">Годин на сервері</label>
+              <div class="field"><span class="icon">⌛</span>
+                <input type="number" id="hours" name="hours" placeholder="Напр. 150" min="0" step="1" required />
+              </div>
+            </div>
+
+            <div style="grid-column:1/-1">
+              <label for="statsImg">Скрін статистики персонажа (URL)</label>
+              <div class="field"><span class="icon">🖼️</span>
+                <input type="url" id="statsImg" name="statsImg" placeholder="https://..." required />
+              </div>
+              <div class="preview" id="previewBox">
+                <img id="statsPreview" alt="Превʼю статистики" />
+                <div class="empty">Додайте посилання на зображення, щоб побачити превʼю.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn secondary" data-prev>Назад</button>
+            <button type="button" class="btn" data-next>Далі</button>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="pane" data-step="2">
+          <div class="section-title">
+            <span class="badge">📞 Контакти та підтвердження</span>
+          </div>
+          <div class="grid">
+            <div>
+              <label for="discord">Ваш Discord</label>
+              <div class="field"><span class="icon">💬</span>
+                <input type="text" id="discord" name="discord" placeholder="@user або user#1234" required />
+              </div>
+            </div>
+
+            <div class="review" aria-live="polite">
+              <div class="kv"><b>Нік:</b> <span id="r_nick">—</span></div>
+              <div class="kv"><b>Рівень:</b> <span id="r_level">—</span></div>
+              <div class="kv"><b>Імʼя (IRL):</b> <span id="r_realname">—</span></div>
+              <div class="kv"><b>Вік (IRL):</b> <span id="r_age">—</span></div>
+              <div class="kv"><b>Часовий пояс:</b> <span id="r_timezone">—</span></div>
+              <div class="kv"><b>Онлайн:</b> <span id="r_online">—</span></div>
+              <div class="kv"><b>Годин на сервері:</b> <span id="r_hours">—</span></div>
+              <div class="kv"><b>Discord:</b> <span id="r_discord">—</span></div>
+            </div>
+
+            <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:var(--muted)">
+              <input type="checkbox" id="agree" required style="margin-top:4px; width:16px; height:16px" />
+              Підтверджую, що дані вказані коректно. Розумію, що модерація може звʼязатися зі мною в Discord.
+            </label>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn secondary" data-prev>Назад</button>
+            <button type="submit" class="btn" id="submitBtn">
+              Відправити
+            </button>
+          </div>
+        </section>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><span id="toastIcon">✅</span><span id="toastText">Успішно</span></div>
+
+<script>
+  // Elements
+  const form = document.getElementById("familyForm");
+  const panes = Array.from(document.querySelectorAll(".pane"));
+  const steps = Array.from(document.querySelectorAll(".stepper .step"));
+  const progress = document.getElementById("progress");
+  const nextBtns = document.querySelectorAll("[data-next]");
+  const prevBtns = document.querySelectorAll("[data-prev]");
+  const submitBtn = document.getElementById("submitBtn");
+  const toast = document.getElementById("toast");
+  const toastIcon = document.getElementById("toastIcon");
+  const toastText = document.getElementById("toastText");
+
+  // Inputs
+  const nick = document.getElementById("nick");
+  const level = document.getElementById("level");
+  const realname = document.getElementById("realname");
+  const age = document.getElementById("age");
+  const timezone = document.getElementById("timezone");
+  const experience = document.getElementById("experience");
+  const online = document.getElementById("online");
+  const hours = document.getElementById("hours");
+  const statsImg = document.getElementById("statsImg");
+  const discord = document.getElementById("discord");
+  const agree = document.getElementById("agree");
+
+  // Review fields
+  const r = {
+    nick: document.getElementById("r_nick"),
+    level: document.getElementById("r_level"),
+    realname: document.getElementById("r_realname"),
+    age: document.getElementById("r_age"),
+    timezone: document.getElementById("r_timezone"),
+    online: document.getElementById("r_online"),
+    hours: document.getElementById("r_hours"),
+    discord: document.getElementById("r_discord"),
+  };
+
+  // Stats preview
+  const previewImg = document.getElementById("statsPreview");
+  const previewBox = document.getElementById("previewBox");
+
+  let current = 0;
+
+  function setProgress(i){
+    const pct = (i)/(steps.length-1) * 100;
+    progress.style.setProperty("--w", pct + "%");
+    steps.forEach((s, idx)=>{
+      s.classList.toggle("active", idx === i);
+      s.classList.toggle("done", idx < i);
+    });
+  }
+
+  function showStep(i){
+    current = i;
+    panes.forEach((p, idx)=>{
+      p.classList.toggle("active", idx === i);
+      // Disable hidden pane inputs to avoid native validity blocking
+      const controls = p.querySelectorAll("input, textarea, select, button");
+      controls.forEach(el => el.disabled = (idx !== i) && el.type !== "button");
+    });
+    setProgress(i);
+    if(i === 2) updateReview();
+  }
+
+  function validateCurrentStep(){
+    const pane = panes[current];
+    const fields = pane.querySelectorAll("input, textarea, select");
+    for (const el of fields) {
+      if (el.disabled) continue;
+      if (!el.checkValidity()) {
+        el.reportValidity();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  nextBtns.forEach(btn => btn.addEventListener("click", ()=>{
+    if(!validateCurrentStep()) return;
+    showStep(Math.min(current+1, panes.length-1));
+  }));
+  prevBtns.forEach(btn => btn.addEventListener("click", ()=>{
+    showStep(Math.max(current-1, 0));
+  }));
+
+  // Live review
+  function updateReview(){
+    r.nick.textContent = nick.value || "—";
+    r.level.textContent = level.value || "—";
+    r.realname.textContent = realname.value || "—";
+    r.age.textContent = age.value || "—";
+    r.timezone.textContent = timezone.value || "—";
+    r.online.textContent = online.value || "—";
+    r.hours.textContent = hours.value || "—";
+    r.discord.textContent = discord.value || "—";
+  }
+  [nick, level, realname, age, timezone, online, hours, discord].forEach(el=>{
+    el.addEventListener("input", updateReview);
+  });
+
+  // Preview image on URL input
+  let previewTimer;
+  statsImg.addEventListener("input", ()=>{
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(()=>{
+      const url = (statsImg.value || "").trim();
+      if(!url || !/^https?:\/\//i.test(url)){
+        previewImg.style.display="none";
+        return;
+      }
+      previewImg.src = url;
+    }, 250);
+  });
+  previewImg.addEventListener("load", ()=>{
+    previewImg.style.display = "block";
+  });
+  previewImg.addEventListener("error", ()=>{
+    previewImg.style.display = "none";
+  });
+
+  function toastShow(msg, type="success"){
+    toast.className = "toast " + type + " show";
+    toastText.textContent = msg;
+    toastIcon.textContent = type === "success" ? "✅" : "⚠️";
+    setTimeout(()=> toast.classList.remove("show"), 3800);
+  }
+
+  // IMPORTANT: use your server endpoint that forwards to the Discord webhook securely.
+  const WEBHOOK_URL = "https://discord.com/api/webhooks/1439639560496873523/57HPaETWuyPGgH-mSg66ph5WWT9CAkuY-MHZgw73pjoCfaX7vnltcKc4wYjOGzO9EOuy"; // e.g. /api/apply on your backend
+
+  form.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    if(!validateCurrentStep()) return;
+
+    if(!WEBHOOK_URL || WEBHOOK_URL.startsWith("YOUR_")){
+      toastShow("Немає серверного endpointʼу. Додайте свій бекенд URL.", "error");
+      return;
+    }
+
+    const timestamp = new Date().toLocaleString("uk-UA");
+
+    const payload = {
+      content: "@here **Нова заявка на вступ до сім'ї**",
+      embeds: [
+        {
+          title: "📥 Нова заявка",
+          description: "Кандидат подав форму. Нижче — структурований звіт.",
+          color: 5814783,
+          thumbnail: { url: "https://cdn-icons-png.flaticon.com/512/942/942748.png" },
+          fields: [
+            {
+              name: "📌 ОСОБИСТА ІНФОРМАЦІЯ",
+              value:
+                `**Нік:** ${nick.value}\n` +
+                `**Рівень:** ${level.value}\n` +
+                `**Імʼя (IRL):** ${realname.value}\n` +
+                `**Вік (IRL):** ${age.value}\n` +
+                `**Часовий пояс:** ${timezone.value}`
+            },
+            {
+              name: "🎮 ІГРОВА ІНФОРМАЦІЯ",
+              value:
+                `**Досвід РП / сімʼї:**\n${experience.value}\n\n` +
+                `**Середній онлайн:** ${online.value}\n` +
+                `**Годин на сервері:** ${hours.value}`
+            },
+            {
+              name: "📊 Статистика персонажа",
+              value: statsImg.value ? `[Відкрити скрін](${statsImg.value})` : "—"
+            },
+            {
+              name: "📞 Контактна інформація",
+              value: `**Discord:** ${discord.value}`
+            },
+            {
+              name: "🕒 Дата подання",
+              value: timestamp
+            }
+          ],
+          footer: { text: "Сімейний відділ | Обробка заявок" }
+        }
+      ]
+    };
+
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = "Відправляємо…";
+
+    try{
+      const res = await fetch(WEBHOOK_URL, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if(!res.ok) throw new Error("HTTP " + res.status);
+
+      toastShow("Успішно відправлено! 🎉", "success");
+      form.reset();
+      previewImg.style.display="none";
+      showStep(0);
+    }catch(err){
+      console.error(err);
+      toastShow("Помилка відправки. Спробуйте пізніше.", "error");
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+
+  // Init state
+  showStep(0);
+</script>
+</body>
+</html>
