@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Результати розгляду заявки</title>
+  <style>
+    :root{
+      --bg: #050505;
+      --card-bg: rgba(25, 25, 25, 0.65);
+      --field-bg: rgba(10, 10, 10, 0.7);
+      --text: #e5e5e5;
+      --muted: #888888;
+      --accent: #ffffff;
+      --accent-hover: #cccccc;
+      --btn-text: #000000;
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 16px 48px rgba(0,0,0,.6);
+      --radius: 12px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; color:var(--text);
+      background: var(--bg);
+      display:flex; align-items:center; justify-content:center; padding:20px;
+      position: relative;
+      overflow: hidden;
+    }
+    body::after{
+        content: ""; position: absolute; inset: -100%;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        opacity: 0.02; pointer-events:none;
+        animation: noise 10s steps(10) infinite;
+    }
+    @keyframes noise { from { transform: translate(0, 0); } to { transform: translate(-25%, -25%); } }
+
+    .card{
+      width:min(560px,100%); background:var(--card-bg);
+      border:1px solid var(--border); border-radius:var(--radius);
+      padding:24px 28px 22px; box-shadow:var(--shadow);
+      backdrop-filter:saturate(100%) blur(12px);
+      transform:translateY(6px); opacity:0;
+      animation:cardIn .5s .05s ease-out forwards;
+    }
+    @keyframes cardIn{to{transform:translateY(0); opacity:1}}
+
+    h2{margin:0 0 18px; font-weight:600; letter-spacing:.3px}
+    .grid{display:grid; gap:16px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+    label{font-size:14px; color:var(--muted); font-weight:500;}
+    .field{
+      background:var(--field-bg); border:1px solid var(--border); border-radius:10px; padding:12px 14px;
+      display:flex; align-items:center; gap:10px; transition:.2s;
+    }
+    .field:focus-within{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(255,255,255,.1); background:rgba(0,0,0,0.5) }
+    input, select, textarea{
+      width:100%; background:transparent; color:var(--text);
+      border:none; outline:none; font-size:15px; font-family: inherit;
+    }
+    select option { background: #1a1a1a; color: var(--text); }
+    textarea{min-height:90px; resize:vertical}
+    .row .field, .grid .field{margin-top:6px}
+
+    .actions{display:flex; gap:12px; margin-top:10px}
+    .btn{
+      flex:1; border:none; border-radius:10px;
+      background:var(--accent);
+      color: var(--btn-text); font-weight:700; font-size: 15px; letter-spacing: 0.5px;
+      padding:13px 14px; cursor:pointer;
+      box-shadow:0 8px 20px rgba(0,0,0,.4);
+      transition: all .2s ease;
+    }
+    .btn:hover{ transform:translateY(-2px); background:var(--accent-hover); box-shadow:0 12px 24px rgba(0,0,0,.5); }
+    .btn:active{ transform:translateY(0) scale(.98); }
+
+    .btn.loading{ opacity:.8; cursor:wait }
+    .btn.loading span{ visibility:hidden }
+    .btn.loading::before{
+      content:""; position:absolute; top:50%; left:50%; width:18px; height:18px; border-radius:50%;
+      border:3px solid rgba(0,0,0,.25); border-top-color:var(--btn-text); transform:translate(-50%,-50%);
+      animation:spin .75s linear infinite;
+    }
+    @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+    .hide{display:none}
+
+    .toast{
+      position:fixed; right:20px; top:20px; background:#1e1e1e;
+      border:1px solid var(--border); color:#fff; padding:12px 16px; border-radius:8px;
+      box-shadow:var(--shadow); display:flex; align-items:center; gap:10px;
+      opacity:0; transform:translateY(-8px); pointer-events:none; z-index: 100;
+    }
+    .toast.show{ animation:toastIn .25s ease forwards }
+    @keyframes toastIn{to{opacity:1; transform:translateY(0)}}
+    .toast.ok{ border-left: 4px solid #fff; }
+    .toast.err{ border-left: 4px solid #999; }
+
+    .pulse{ display:none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Результати розгляду заявки</h2>
+
+    <div class="grid">
+      <div class="row">
+        <div>
+          <label for="status">Статус</label>
+          <div class="field">
+            <select id="status">
+              <option value="approved">Схвалено</option>
+              <option value="declined">Відмовлено</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="reviewer">Перевірив</label>
+          <div class="field">
+            <input id="reviewer" type="text" placeholder="Ваш нікнейм" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ОНОВЛЕНИЙ БЛОК: Текст змінено для ясності -->
+      <div>
+        <label for="mention">Кандидат (ID для тегу)</label>
+        <div class="field">
+          <!-- Плейсхолдер тепер чітко вказує, що потрібен ID для сповіщення -->
+          <input id="mention" type="text" placeholder="Щоб тегнути, вставте ID користувача" />
+        </div>
+      </div>
+
+      <div id="reasonWrap" class="hide">
+        <label for="reason">Причина відмови</label>
+        <div class="field">
+          <textarea id="reason" placeholder="Вкажіть чітку причину..."></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="sendBtn"><span>Надіслати результат</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><span id="tIcon">✅</span><span id="tText">Успішно</span></div>
+  <div class="pulse" id="pulse"></div>
+
+<script>
+  // ВАШ WEBHOOK
+  const WEBHOOK_URL = "https://discord.com/api/webhooks/1439649325935231127/jYPPHMYTo9oBzxyPt4KdGSKgqmVuRfI_Vk2WhkFGhYarZ0wTjGjRHr_9GfHSyrJAGxLo";
+
+  const statusEl   = document.getElementById('status');
+  const reviewerEl = document.getElementById('reviewer');
+  const mentionEl  = document.getElementById('mention');
+  const reasonWrap = document.getElementById('reasonWrap');
+  const reasonEl   = document.getElementById('reason');
+  const sendBtn    = document.getElementById('sendBtn');
+  const toast      = document.getElementById('toast');
+  const tIcon      = document.getElementById('tIcon');
+  const tText      = document.getElementById('tText');
+
+  function toggleReason(){
+    const declined = statusEl.value === 'declined';
+    reasonWrap.classList.toggle('hide', !declined);
+    reasonEl.required = declined;
+  }
+  statusEl.addEventListener('change', toggleReason);
+  toggleReason();
+
+  function extractUserId(input){
+    const m = String(input||'').match(/\d{17,20}/);
+    return m ? m[0] : null;
+  }
+
+  function buildPayload(){
+    const isApproved = statusEl.value === 'approved';
+    const reviewer = reviewerEl.value.trim();
+    const rawMention = mentionEl.value.trim();
+    const userId = extractUserId(rawMention);
+    const reason = reasonEl.value.trim();
+
+    const color = isApproved ? 0xcccccc : 0x666666;
+    const statusTxt = isApproved ? "**СХВАЛЕНО**" : "**ВІДМОВЛЕНО**";
+
+    // Якщо користувач введе нікнейм, він просто відобразиться як текст.
+    // Якщо буде вставлено ID, то userId буде знайдено і створено справжній тег.
+    const candidateDisplay = userId ? `<@${userId}>` : (rawMention || "—");
+
+    const fields = [
+      { name: "Результат", value: statusTxt, inline: true },
+      { name: "Кандидат", value: candidateDisplay, inline: true },
+      { name: "Перевірив", value: reviewer || "—", inline: true },
+    ];
+
+    if (!isApproved){
+      fields.push({ name: "Причина", value: reason || "Не вказано" });
+    }
+
+    const payload = {
+      content: userId ? `<@${userId}>` : "",
+      allowed_mentions: { parse: [], users: userId ? [userId] : [] },
+      embeds: [{
+        color,
+        title: "Заявку розглянуто",
+        description: isApproved ? "Кандидатуру схвалено. Деталі будуть надані в особистих повідомленнях." : "",
+        fields,
+        footer: {
+          text: "Відділ модерації"
+        },
+        timestamp: new Date().toISOString()
+      }]
+    };
+
+    return payload;
+  }
+
+  function showToast(msg, type="ok"){
+    tText.textContent = msg;
+    tIcon.textContent = type === "ok" ? "✔" : "⚠️";
+    toast.className = "toast " + type + " show";
+    setTimeout(()=> toast.classList.remove("show"), 3200);
+  }
+
+  async function send(){
+    const reviewer = reviewerEl.value.trim();
+    const rawMention = mentionEl.value.trim();
+    const reason = reasonEl.value.trim();
+    const status = statusEl.value;
+
+    if (!reviewer){ showToast("Вкажіть, хто перевірив", "err"); return; }
+    if (!rawMention){ showToast("Вкажіть кандидата", "err"); return; }
+    if (status === "declined" && reason.length < 5){ showToast("Причина відмови занадто коротка", "err"); return; }
+
+    const payload = buildPayload();
+
+    sendBtn.classList.add("loading");
+    try{
+      const res = await fetch(WEBHOOK_URL, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload),
+        mode:"cors"
+      });
+      if(!res.ok){
+        const txt = await res.text().catch(()=> "");
+        throw new Error(`HTTP ${res.status}: ${txt}`);
+      }
+      showToast("Результат надіслано", "ok");
+      
+      mentionEl.value = "";
+      reasonEl.value = "";
+
+    }catch(e){
+      console.error(e);
+      showToast("Помилка відправки", "err");
+    }finally{
+      sendBtn.classList.remove("loading");
+    }
+  }
+
+  sendBtn.addEventListener('click', send);
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && !e.shiftKey){
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      if(tag !== 'textarea'){ e.preventDefault(); send(); }
+    }
+  });
+</script>
+</body>
+</html>
