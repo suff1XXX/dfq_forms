@@ -67,6 +67,30 @@
     .title h1{margin:0; font-size:20px; letter-spacing:.4px}
     .title p{margin:4px 0 0; color:var(--muted); font-size:13px}
 
+    /* Counter */
+    .stats-counter{
+      margin-left:auto;
+      text-align:center;
+      padding:0 10px;
+    }
+    .stats-counter #app-count{
+      font-size:24px;
+      font-weight:700;
+      color:var(--accent-2);
+      line-height:1;
+      display:block;
+    }
+    .stats-counter #app-count.pulse{ animation:pulse .4s ease-in-out }
+    @keyframes pulse{
+      0%, 100%{ transform:scale(1) }
+      50%{ transform:scale(1.15) }
+    }
+    .stats-counter span{
+      font-size:11px;
+      color:var(--muted);
+      letter-spacing:.3px;
+    }
+
     .content{padding:20px; display:grid; gap:18px}
 
     /* Stepper */
@@ -214,6 +238,11 @@
         <h1>Вступ до сімʼї</h1>
         <p>Заповніть анкету — ми звʼяжемось якнайшвидше</p>
       </div>
+      <!-- NEW COUNTER -->
+      <div class="stats-counter">
+        <span id="app-count">...</span>
+        <span>Подано заявок</span>
+      </div>
     </div>
 
     <div class="content">
@@ -231,8 +260,7 @@
         </div>
         <div class="step" data-idx="2">
           <div class="dot">3</div>
-          <label>Контакти</label>
-        </div>
+          <label>Контакти</label>        </div>
       </div>
 
       <form id="familyForm" novalidate>
@@ -384,6 +412,7 @@
   const toast = document.getElementById("toast");
   const toastIcon = document.getElementById("toastIcon");
   const toastText = document.getElementById("toastText");
+  const appCountEl = document.getElementById("app-count"); // COUNTER ELEMENT
 
   // Inputs
   const nick = document.getElementById("nick");
@@ -415,6 +444,32 @@
   const previewBox = document.getElementById("previewBox");
 
   let current = 0;
+
+  // --- COUNTER LOGIC ---
+  const COUNT_KEY = "familyAppSubmissions";
+  const BASE_COUNT = 0; // Початкове число заявок
+
+  function getSubmissionCount() {
+    const storedCount = localStorage.getItem(COUNT_KEY);
+    return storedCount ? parseInt(storedCount, 10) : BASE_COUNT;
+  }
+
+  function updateCounterDisplay() {
+    const count = getSubmissionCount();
+    appCountEl.textContent = count;
+  }
+
+  function incrementSubmissionCount() {
+    let currentCount = getSubmissionCount();
+    currentCount++;
+    localStorage.setItem(COUNT_KEY, currentCount);
+    appCountEl.textContent = currentCount;
+    // Animate the number
+    appCountEl.classList.add("pulse");
+    setTimeout(() => appCountEl.classList.remove("pulse"), 400);
+  }
+  // --- END COUNTER LOGIC ---
+
 
   function setProgress(i){
     const pct = (i)/(steps.length-1) * 100;
@@ -515,7 +570,7 @@
     const timestamp = new Date().toLocaleString("uk-UA");
 
     const payload = {
-      content: "@here **Нова заявка на вступ до сім'ї**",
+      content: `@here **Нова заявка на вступ до сім'ї**`,
       embeds: [
         {
           title: "📥 Нова заявка",
@@ -571,6 +626,7 @@
       if(!res.ok) throw new Error("HTTP " + res.status);
 
       toastShow("Успішно відправлено! 🎉", "success");
+      incrementSubmissionCount(); // Increment counter on success
       form.reset();
       previewImg.style.display="none";
       showStep(0);
@@ -585,6 +641,7 @@
 
   // Init state
   showStep(0);
+  updateCounterDisplay(); // Set initial counter value on page load
 </script>
 </body>
 </html>
